@@ -26,9 +26,10 @@ namespace TraTech.WebSocketHub
 
         public async Task Invoke(HttpContext httpContext)
         {
-            try
+
+            if (httpContext.WebSockets.IsWebSocketRequest && _acceptIf(httpContext))
             {
-                if (httpContext.WebSockets.IsWebSocketRequest && _acceptIf(httpContext))
+                try
                 {
                     WebSocket webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
 
@@ -50,14 +51,14 @@ namespace TraTech.WebSocketHub
 
                     await _webSocketHub.Remove(key, webSocket);
                 }
-                else
+                catch (Exception exp)
                 {
-                    await _next(httpContext);
+                    Console.WriteLine(exp.ToString());
                 }
             }
-            catch (Exception exp)
+            else
             {
-                Console.WriteLine(exp.ToString());
+                await _next(httpContext);
             }
         }
     }
