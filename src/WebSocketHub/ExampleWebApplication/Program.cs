@@ -1,3 +1,4 @@
+using ExampleWebApplication.WebSocketRequestHandlers;
 using TraTech.WebSocketHub;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<WebSocketHub<int>>();
+builder.Services.AddWebSocketHub<int>()
+    .AddRequestHandler<DenemeWebSocketRequestHandler>("deneme");
+
 
 var app = builder.Build();
 

@@ -30,6 +30,7 @@ namespace TraTech.WebSocketHub
             return Encoding.UTF8.GetBytes(
                 JsonConvert.SerializeObject(message, _jsonSerializerSettings)
             );
+
         }
 
         private static async Task CloseWebSocket(WebSocket webSocket)
@@ -38,6 +39,11 @@ namespace TraTech.WebSocketHub
             {
                 await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Connection End", CancellationToken.None);
             }
+        }
+
+        public Message? DeserializeMessage(string message)
+        {
+            return JsonConvert.DeserializeObject<Message>(message, _jsonSerializerSettings);
         }
 
         public ReadOnlyCollection<WebSocket> GetSocketList(TKey key)
