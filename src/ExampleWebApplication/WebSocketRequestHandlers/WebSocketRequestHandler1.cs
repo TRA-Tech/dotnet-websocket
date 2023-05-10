@@ -2,7 +2,7 @@
 
 namespace ExampleWebApplication.WebSocketRequestHandlers
 {
-    public class DenemeWebSocketRequestHandler : IWebSocketRequestHandler
+    public class WebSocketRequestHandler1 : IWebSocketRequestHandler
     {
         public Task HandleRequestAsync(string key, string data)
         {

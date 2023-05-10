@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Net.WebSockets;
 using System.Text;
@@ -9,30 +10,36 @@ namespace TraTech.WebSocketHub
         where TKey : notnull
     {
         private readonly Dictionary<TKey, List<WebSocket>> _webSocketDictionary;
-        private readonly JsonSerializerSettings _jsonSerializerSettings;
 
         private static readonly Func<WebSocket, bool> _openSocketSelector = socket => socket.State == WebSocketState.Open;
 
-        public WebSocketHub()
-        {
-            _webSocketDictionary = new();
-            _jsonSerializerSettings = new JsonSerializerSettings();
-        }
+        public WebSocketHubOptions Options { get; private set; }
 
-        public WebSocketHub(JsonSerializerSettings jsonSerializerSettings)
+        public WebSocketHub(IOptions<WebSocketHubOptions> options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            Options = options.Value;
+
             _webSocketDictionary = new();
-            _jsonSerializerSettings = jsonSerializerSettings;
         }
 
         private byte[] EncodeMessage(Message message)
         {
             return Encoding.UTF8.GetBytes(
-                JsonConvert.SerializeObject(message, _jsonSerializerSettings)
+                JsonConvert.SerializeObject(message, Options.JsonSerializerSettings)
             );
         }
 
-        private static async Task CloseWebSocket(WebSocket webSocket)
+        private static async Task SendAsync(byte[] message, WebSocket socket)
+        {
+            if (socket == null || socket.State != WebSocketState.Open) return;
+            if (message == null) return;
+
+            if (socket.State == WebSocketState.Open)
+                await socket.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
+        private static async Task CloseWebSocketAsync(WebSocket webSocket)
         {
             if (webSocket.State != WebSocketState.Closed && webSocket.State != WebSocketState.Aborted)
             {
@@ -42,16 +49,27 @@ namespace TraTech.WebSocketHub
 
         public Message? DeserializeMessage(string message)
         {
-            return JsonConvert.DeserializeObject<Message>(message, _jsonSerializerSettings);
+            return JsonConvert.DeserializeObject<Message>(message, Options.JsonSerializerSettings);
         }
 
         public ReadOnlyCollection<WebSocket> GetSocketList(TKey key)
         {
-            if (_webSocketDictionary.Keys.Contains(key))
+            lock (_webSocketDictionary)
             {
+                if (!_webSocketDictionary.ContainsKey(key)) throw new KeyNotFoundException(nameof(key));
+
                 return _webSocketDictionary[key].AsReadOnly();
             }
-            throw new KeyNotFoundException(key.ToString());
+        }
+
+        public ReadOnlyCollection<WebSocket> GetSocketList(Func<TKey, bool> selector)
+        {
+            lock (_webSocketDictionary)
+            {
+                TKey key = _webSocketDictionary.Keys.FirstOrDefault(selector) ?? throw new KeyNotFoundException(nameof(selector));
+
+                return _webSocketDictionary[key].AsReadOnly();
+            }
         }
 
         public void Add(TKey key, WebSocket webSocket)
@@ -60,48 +78,67 @@ namespace TraTech.WebSocketHub
 
             lock (_webSocketDictionary)
             {
-                if (!_webSocketDictionary.Keys.Contains(key)) _webSocketDictionary[key] = new List<WebSocket>();
+                if (!_webSocketDictionary.ContainsKey(key)) _webSocketDictionary[key] = new List<WebSocket>();
                 _webSocketDictionary[key].Add(webSocket);
             }
         }
 
-        public async Task Remove(TKey key, WebSocket webSocket)
+        public async Task RemoveAsync(TKey key, WebSocket webSocket)
         {
             lock (_webSocketDictionary)
             {
+                if (!_webSocketDictionary.ContainsKey(key)) throw new KeyNotFoundException(nameof(key));
+
+                _webSocketDictionary[key].Remove(webSocket);
+
+                if (_webSocketDictionary[key].Count == 0) _webSocketDictionary.Remove(key);
+            }
+
+            await WebSocketHub<TKey>.CloseWebSocketAsync(webSocket);
+        }
+
+        public async Task RemoveAsync(Func<TKey, bool> selector, WebSocket webSocket)
+        {
+            lock (_webSocketDictionary)
+            {
+                TKey key = _webSocketDictionary.Keys.FirstOrDefault(selector) ?? throw new KeyNotFoundException(nameof(key));
+
                 if (_webSocketDictionary.ContainsKey(key)) _webSocketDictionary[key].Remove(webSocket);
                 if (_webSocketDictionary[key].Count == 0) _webSocketDictionary.Remove(key);
             }
 
-            await WebSocketHub<TKey>.CloseWebSocket(webSocket);
+            await WebSocketHub<TKey>.CloseWebSocketAsync(webSocket);
         }
 
-        public async Task RemoveFirst(Func<TKey, bool> selector)
+        public async Task RemoveFirstAsync(Func<TKey, bool> selector)
         {
-            IEnumerable<WebSocket> sockets;
+            IEnumerable<WebSocket> sockets = Enumerable.Empty<WebSocket>();
 
             lock (_webSocketDictionary)
             {
-                var key = _webSocketDictionary.Keys.FirstOrDefault(selector);
-                if (key == null) return;
+                TKey key = _webSocketDictionary.Keys.FirstOrDefault(selector) ?? throw new KeyNotFoundException(nameof(key));
+
                 sockets = _webSocketDictionary[key];
                 _webSocketDictionary.Remove(key);
             }
 
             foreach (var socket in sockets)
             {
-                await WebSocketHub<TKey>.CloseWebSocket(socket);
+                await WebSocketHub<TKey>.CloseWebSocketAsync(socket);
             }
         }
 
-        public async Task RemoveWhere(Func<TKey, bool> selector)
+        public async Task RemoveWhereAsync(Func<TKey, bool> selector)
         {
-            List<WebSocket> sockets = new List<WebSocket>();
+            List<WebSocket> sockets = new();
 
             lock (_webSocketDictionary)
             {
                 IEnumerable<TKey>? keys = _webSocketDictionary.Keys.Where(selector);
-                if (keys == null || keys?.Count() == 0) return;
+
+                if (keys == null) throw new NullReferenceException(nameof(keys));
+
+                if (!keys.Any()) return;
 
                 foreach (var key in keys)
                 {
@@ -112,38 +149,31 @@ namespace TraTech.WebSocketHub
 
             foreach (var socket in sockets)
             {
-                await WebSocketHub<TKey>.CloseWebSocket(socket);
+                await WebSocketHub<TKey>.CloseWebSocketAsync(socket);
             }
         }
 
-        public async Task RemoveAll()
+        public async Task RemoveAllAsync()
         {
-            List<WebSocket> sockets = new List<WebSocket>();
+            List<WebSocket> sockets = new();
+
             lock (_webSocketDictionary)
             {
                 foreach (var keyValue in _webSocketDictionary)
                 {
                     sockets.AddRange(keyValue.Value);
                 }
+
                 _webSocketDictionary.Clear();
             }
 
             foreach (var socket in sockets)
             {
-                await WebSocketHub<TKey>.CloseWebSocket(socket);
+                await WebSocketHub<TKey>.CloseWebSocketAsync(socket);
             }
         }
 
-        private static async Task Send(byte[] message, WebSocket socket)
-        {
-            if (socket == null || socket.State != WebSocketState.Open) return;
-            if (message == null) return;
-
-            if (socket.State == WebSocketState.Open)
-                await socket.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-
-        public async Task Send(Message message, params WebSocket[] sockets)
+        public async Task SendAsync(Message message, params WebSocket[] sockets)
         {
             if (sockets == null || sockets.Length == 0) return;
             if (message == null) return;
@@ -152,56 +182,99 @@ namespace TraTech.WebSocketHub
 
             foreach (var socket in sockets.Where(_openSocketSelector))
             {
-                await WebSocketHub<TKey>.Send(byteMessage, socket);
+                await WebSocketHub<TKey>.SendAsync(byteMessage, socket);
             }
         }
 
-        public async Task Send(Message message, TKey key)
+        public async Task SendAsync(Message message, TKey key)
         {
             if (key == null) return;
             if (message == null) return;
-            if (!_webSocketDictionary.ContainsKey(key)) return;
 
-            IEnumerable<WebSocket> openSocketList = _webSocketDictionary[key].Where(_openSocketSelector);
+            IEnumerable<WebSocket> openSocketList = Enumerable.Empty<WebSocket>();
+
+            lock (_webSocketDictionary)
+            {
+                if (!_webSocketDictionary.ContainsKey(key)) throw new KeyNotFoundException(nameof(key));
+
+                openSocketList = _webSocketDictionary[key].Where(_openSocketSelector);
+            }
 
             byte[] byteMessage = EncodeMessage(message);
 
             foreach (var websocket in openSocketList)
             {
-                await Send(byteMessage, websocket);
+                await SendAsync(byteMessage, websocket);
             }
         }
 
-        public async Task SendWhere(Message message, Func<TKey, bool> selector)
+        public async Task SendAsync(Message message, Func<TKey, bool> selector)
         {
             if (message == null) return;
 
-            IEnumerable<TKey>? keys = _webSocketDictionary.Keys.Where(selector);
-            if (keys == null || keys?.Count() == 0) return;
+            IEnumerable<WebSocket> openSocketList = Enumerable.Empty<WebSocket>();
+
+            lock (_webSocketDictionary)
+            {
+                TKey key = _webSocketDictionary.Keys.FirstOrDefault(selector) ?? throw new KeyNotFoundException(nameof(selector));
+                openSocketList = _webSocketDictionary[key].Where(_openSocketSelector);
+            }
 
             byte[] byteMessage = EncodeMessage(message);
 
-            foreach (var key in keys)
+            foreach (var websocket in openSocketList)
             {
-                foreach (var socket in _webSocketDictionary[key].Where(_openSocketSelector))
-                {
-                    await Send(byteMessage, socket);
-                }
+                await SendAsync(byteMessage, websocket);
             }
         }
 
-        public async Task SendAll(Message message)
+        public async Task SendWhereAsync(Message message, Func<TKey, bool> selector)
         {
             if (message == null) return;
 
+            List<WebSocket> sockets = new();
+
+            lock (_webSocketDictionary)
+            {
+                IEnumerable<TKey>? keys = _webSocketDictionary.Keys.Where(selector);
+
+                if (keys == null) throw new NullReferenceException(nameof(keys));
+
+                if (!keys.Any()) return;
+
+                foreach (var key in keys)
+                {
+                    sockets.AddRange(_webSocketDictionary[key].Where(_openSocketSelector));
+                }
+            }
+
             byte[] byteMessage = EncodeMessage(message);
 
-            foreach (KeyValuePair<TKey, List<WebSocket>> keyValue in _webSocketDictionary)
+            foreach (var socket in sockets)
             {
-                foreach (var socket in keyValue.Value.Where(_openSocketSelector))
+                await SendAsync(byteMessage, socket);
+            }
+        }
+
+        public async Task SendAllAsync(Message message)
+        {
+            if (message == null) return;
+
+            List<WebSocket> sockets = new();
+
+            lock (_webSocketDictionary)
+            {
+                foreach (var keyValuePair in _webSocketDictionary)
                 {
-                    await Send(byteMessage, socket);
+                    sockets.AddRange(keyValuePair.Value.Where(_openSocketSelector));
                 }
+            }
+
+            byte[] byteMessage = EncodeMessage(message);
+
+            foreach (var socket in sockets)
+            {
+                await SendAsync(byteMessage, socket);
             }
         }
     }
