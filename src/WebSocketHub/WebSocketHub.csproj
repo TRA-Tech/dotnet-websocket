@@ -4,6 +4,14 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Title>Web Socket Hub</Title>
+    <Version>$(VersionPrefix)</Version>
+    <Authors>SametYazici</Authors>
+    <Company>TRA Tech</Company>
+    <Description>Web Socket Hub Middleware for .NET</Description>
+    <PackageProjectUrl>https://github.com/TRA-Tech/web-socket-hub</PackageProjectUrl>
+    <PackageIcon></PackageIcon>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
