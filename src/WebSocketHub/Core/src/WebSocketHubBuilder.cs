@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 
 namespace TraTech.WebSocketHub
@@ -19,6 +20,26 @@ namespace TraTech.WebSocketHub
             });
 
             Services.TryAddTransient<THandler>();
+
+            return this;
+        }
+
+        public WebSocketHubBuilder AddJsonSerializerSettings(JsonSerializerSettings jsonSerializerSettings)
+        {
+            Services.Configure<WebSocketHubOptions>(o =>
+            {
+                o.UseJsonSerializerSettings(jsonSerializerSettings);
+            });
+
+            return this;
+        }
+
+        public WebSocketHubBuilder AddReceiveBufferSize(int receiveBufferSize)
+        {
+            Services.Configure<WebSocketHubOptions>(o =>
+            {
+                o.UseReceiveBufferSize(receiveBufferSize);
+            });
 
             return this;
         }
