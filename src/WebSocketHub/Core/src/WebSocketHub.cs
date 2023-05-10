@@ -30,7 +30,6 @@ namespace TraTech.WebSocketHub
             return Encoding.UTF8.GetBytes(
                 JsonConvert.SerializeObject(message, _jsonSerializerSettings)
             );
-
         }
 
         private static async Task CloseWebSocket(WebSocket webSocket)
