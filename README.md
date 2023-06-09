@@ -5,13 +5,13 @@ WebSocketHub is a middleware for ASP.NET Core that simplifies the process of bui
 1. Add the following code to register the WebSocketHub service with the desired key type.
 Replace TKey with the type of key you want to use for WebSocket connections.
 
-  ```
+  ```cs
   services.AddWebSocketHub<TKey>();
   ```
   
 2. (Optional) Configure the WebSocketHub by chaining method calls to the AddWebSocketHub method:
 
-  ```
+  ```cs
   services.AddWebSocketHub<TKey>()
     .AddJsonSerializerSettings(jsonSerializerSettings)
     .AddReceiveBufferSize(receiveBufferSize)
@@ -20,7 +20,7 @@ Replace TKey with the type of key you want to use for WebSocket connections.
   
 3. Add the following code to use the WebSocketHub middleware:
 
-  ```
+  ```cs
    app.UseWebSocketHub(
        acceptIf: (httpContext) => /* Your accept condition */,
        keyGenerator: (httpContext) => /* Your key generator */
@@ -29,7 +29,7 @@ Replace TKey with the type of key you want to use for WebSocket connections.
     
 4. Use the WebSocketHub instance with dependency injection wherever you need it.
 
-  ```
+  ```cs
    private readonly WebSocketHub<TKey> _webSocketHub;
 
    public MyController(WebSocketHub<TKey> webSocketHub)
@@ -38,7 +38,7 @@ Replace TKey with the type of key you want to use for WebSocket connections.
    }
   ```
   
-  ```
+  ```cs
    [HttpGet("GetSocketList")]
    public IActionResult GetSocketList(TKey id)
    {
@@ -49,7 +49,7 @@ Replace TKey with the type of key you want to use for WebSocket connections.
 5. Handle requests with classes that implement the ```IWebSocketRequestHandler``` interface.
 Don't forget to register the implementation of ```IWebSocketRequestHandler``` with the ```WebSocketHub```
    
-  ```
+  ```cs
    public class MyWebSocketRequestHandler : IWebSocketRequestHandler
    {
        public Task HandleRequestAsync(string key, string data)
@@ -60,7 +60,7 @@ Don't forget to register the implementation of ```IWebSocketRequestHandler``` wi
    }
   ```
   
-  ```
+  ```cs
    services.AddWebSocketHub<TKey>()
        .AddRequestHandler<MyWebSocketRequestHandler>("messageType");
   ```
