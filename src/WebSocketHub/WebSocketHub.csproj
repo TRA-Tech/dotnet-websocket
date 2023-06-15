@@ -5,11 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>Web Socket Hub</Title>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>TRA Tech</Authors>
     <Company>TRA Tech</Company>
     <Description>Web Socket Hub middleware for .NET</Description>
-    <PackageProjectUrl>https://github.com/TRA-Tech/web-socket-hub</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/TRA-Tech/dotnet-websocket</PackageProjectUrl>
     <PackageIcon></PackageIcon>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
