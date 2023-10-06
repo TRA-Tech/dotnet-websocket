@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace TraTech.WebSocketHub
+namespace TraTech.WebSocketHub.Abstractions
 {
     /// <summary>
     /// Defines the interface for providing WebSocket request handlers.

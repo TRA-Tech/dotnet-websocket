@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using TraTech.WebSocketHub.Abstractions;
 
-namespace TraTech.WebSocketHub
+namespace TraTech.WebSocketHub.Core
 {
     /// <summary>
     /// Provides WebSocket request handlers for handling WebSocket requests.

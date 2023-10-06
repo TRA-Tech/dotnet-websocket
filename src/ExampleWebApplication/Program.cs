@@ -1,8 +1,8 @@
 using ExampleWebApplication.WebSocketRequestHandlers;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
-using TraTech.WebSocketHub;
 using ExampleWebApplication.WebSocketHubKeys;
+using TraTech.WebSocketHub.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 

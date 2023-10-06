@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
+using TraTech.WebSocketHub.Abstractions;
 
-namespace TraTech.WebSocketHub
+namespace TraTech.WebSocketHub.Core
 {
     /// <summary>
     /// Represents the options for configuring the WebSocketHub.

@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Net.WebSockets;
 using System.Text;
 
-namespace TraTech.WebSocketHub
+namespace TraTech.WebSocketHub.Core
 {
     /// <summary>
     /// Represents a hub for managing WebSocket connections associated with keys of type TKey.

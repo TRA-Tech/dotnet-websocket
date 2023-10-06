@@ -1,6 +1,6 @@
 using ExampleWebApplication.WebSocketHubKeys;
 using Microsoft.AspNetCore.Mvc;
-using TraTech.WebSocketHub;
+using TraTech.WebSocketHub.Core;
 
 namespace ExampleWebApplication.Controllers
 {

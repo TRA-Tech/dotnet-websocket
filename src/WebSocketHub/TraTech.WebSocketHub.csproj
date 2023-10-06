@@ -4,8 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Title>Web Socket Hub</Title>
-    <Version>1.0.2</Version>
+    <Title>TraTech.WebSocketHub</Title>
+    <Version>0.0.1</Version>
     <Authors>TRA Tech</Authors>
     <Company>TRA Tech</Company>
     <Description>Web Socket Hub middleware for .NET</Description>
@@ -15,13 +15,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Compile Remove="Core\test\**" />
+    <EmbeddedResource Remove="Core\test\**" />
+    <None Remove="Core\test\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\test\" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>

@@ -2,8 +2,9 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
+using TraTech.WebSocketHub.Abstractions;
 
-namespace TraTech.WebSocketHub
+namespace TraTech.WebSocketHub.Core
 {
     public class WebSocketHubBuilder
     {

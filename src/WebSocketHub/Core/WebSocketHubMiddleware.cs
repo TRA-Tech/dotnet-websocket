@@ -2,8 +2,9 @@
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using TraTech.WebSocketHub.Abstractions;
 
-namespace TraTech.WebSocketHub
+namespace TraTech.WebSocketHub.Core
 {
     public class WebSocketHubMiddleware<TKey>
             where TKey : notnull

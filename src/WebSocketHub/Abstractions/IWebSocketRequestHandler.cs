@@ -1,4 +1,4 @@
-﻿namespace TraTech.WebSocketHub
+﻿namespace TraTech.WebSocketHub.Abstractions
 {
     /// <summary>
     /// Defines the interface for handling WebSocket requests.

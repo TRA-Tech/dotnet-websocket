@@ -1,4 +1,4 @@
-﻿namespace TraTech.WebSocketHub
+﻿namespace TraTech.WebSocketHub.Core
 {
     /// <summary>
     /// Represents a message sent over a WebSocket connection.

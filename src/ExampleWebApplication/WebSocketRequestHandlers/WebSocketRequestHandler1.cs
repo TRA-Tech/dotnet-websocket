@@ -1,4 +1,4 @@
-﻿using TraTech.WebSocketHub;
+﻿using TraTech.WebSocketHub.Abstractions;
 
 namespace ExampleWebApplication.WebSocketRequestHandlers
 {
