@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebSocketHub\TraTech.WebSocketHub.csproj" />
+    <ProjectReference Include="..\TraTech.WebSocketHub\TraTech.WebSocketHub.csproj" />
   </ItemGroup>
 
 </Project>
